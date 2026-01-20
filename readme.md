@@ -16,7 +16,7 @@ This custom component integrates **Holfuy weather station data** into Home Assis
 ## Installation via HACS
 1. Go to **HACS → Integrations → Custom Repositories**.
 2. Add your repository URL:  
-   `https://github.com/<your-username>/holfuy-homeassistant`
+   `https://github.com/stefanh12/holfuy-homeassistant`
 3. Select **Integration**.
 4. Restart Home Assistant.
 5. Install the integration via HACS.
