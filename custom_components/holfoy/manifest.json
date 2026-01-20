@@ -1,0 +1,10 @@
+
+{
+  "domain": "holfuy",
+  "name": "Holfuy Weather",
+  "version": "1.0.0",
+  "documentation": "https://github.com/<your-username>/holfuy",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@<your-username>"]
+}
