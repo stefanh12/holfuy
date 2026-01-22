@@ -2,6 +2,9 @@
 # Holfuy Weather Integration for Home Assistant
 
 This custom component integrates **Holfuy weather station data** into Home Assistant using the Holfuy API.
+Instructions on how to obtain an API key kan be found here, https://api.holfuy.com/
+
+**To use the integration you need an API key from Holfuy!** You need to contact Holfuy to obtain the key and the key is valid for up to 3 stations.
 
 ## Features
 - Fetches real-time data from Holfuy stations:
