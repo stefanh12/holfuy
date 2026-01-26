@@ -32,6 +32,8 @@
   },
   "mounts": [
     "type=volume,target=/var/lib/docker",
-    "type=volume,target=/mnt/supervisor"
+    "type=volume,target=/mnt/supervisor",
+    "source=${localWorkspaceFolder}/custom_components,target=/config/custom_components,type=bind"
+
   ]
 }
