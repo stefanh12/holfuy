@@ -183,6 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("No station IDs configured for Holfuy entry %s", entry.entry_id)
         return False
 
+    # Get user's preferred units from config entry
     su = entry.data.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
     tu = entry.data.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
 

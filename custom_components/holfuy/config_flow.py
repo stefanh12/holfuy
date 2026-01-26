@@ -133,8 +133,9 @@ class HolfuyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Validate API key and stations by making test API calls
             api_key = user_input[CONF_API_KEY]
-            tu = user_input.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
-            su = user_input.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
+            # Always use standard units for API requests
+            tu = "C"
+            su = "m/s"
 
             validation_result = await _validate_api_key_and_stations(api_key, stations, tu, su)
             if not validation_result["valid"]:

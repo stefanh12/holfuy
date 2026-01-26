@@ -20,19 +20,16 @@ from .const import (
 SENSOR_TYPES = {
     "wind_speed": {
         "name": "Wind Speed",
-        "device_class": SensorDeviceClass.WIND_SPEED,
         "state_class": SensorStateClass.MEASUREMENT,
         "icon": "mdi:weather-windy",
     },
     "wind_gust": {
         "name": "Wind Gust",
-        "device_class": SensorDeviceClass.WIND_SPEED,
         "state_class": SensorStateClass.MEASUREMENT,
         "icon": "mdi:weather-windy",
     },
     "wind_min": {
         "name": "Wind Min",
-        "device_class": SensorDeviceClass.WIND_SPEED,
         "state_class": SensorStateClass.MEASUREMENT,
         "icon": "mdi:weather-windy",
     },
@@ -71,10 +68,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     sensors = []
 
+    # Get user-configured units
     su = entry.data.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
     tu = entry.data.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
 
-    # Map to HA standard units
+    # Map to HA standard units for display
     wind_unit = WIND_UNIT_MAP.get(su, UnitOfSpeed.METERS_PER_SECOND)
     temp_unit = TEMP_UNIT_MAP.get(tu, UnitOfTemperature.CELSIUS)
 
@@ -103,7 +101,6 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._key = key
         self._sensor_config = sensor_config
-        self._attr_native_unit_of_measurement = unit
         self._station_id = str(station_id)
         self._attr_unique_id = f"{DOMAIN}_{self._station_id}_{self._key}"
 
@@ -112,6 +109,9 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
         self._attr_state_class = sensor_config.get("state_class")
         self._attr_icon = sensor_config.get("icon")
         self._attr_name = sensor_config["name"]
+
+        # Set the native unit - this is what the API returns in
+        self._attr_native_unit_of_measurement = unit
 
     @property
     def native_value(self):
