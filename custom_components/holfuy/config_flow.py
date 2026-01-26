@@ -1,5 +1,6 @@
 import re
 import asyncio
+import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
@@ -14,6 +15,8 @@ from .const import (
     DEFAULT_TEMP_UNIT,
     API_URL,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 WIND_UNIT_OPTIONS = ["knots", "km/h", "m/s", "mph"]
 TEMP_UNIT_OPTIONS = ["C", "F"]
