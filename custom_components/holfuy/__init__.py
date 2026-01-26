@@ -12,6 +12,7 @@ from .const import (
     DOMAIN,
     API_URL,
     CONF_API_KEY,
+    CONF_STATION_IDS,
     CONF_WIND_UNIT,
     CONF_TEMP_UNIT,
     DEFAULT_WIND_UNIT,
