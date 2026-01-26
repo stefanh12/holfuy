@@ -9,7 +9,6 @@ from .const import (
     CONF_STATION_IDS,
 )
 
-# Keep sensor type names and device class where applicable; units will be set per-entry
 SENSOR_TYPES = {
     "wind_speed": ("Wind Speed", None),
     "wind_gust": ("Wind Gust", None),
@@ -20,25 +19,17 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    # coordinators is a dict station_id -> coordinator
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry_data["coordinator"]
+    stations = entry_data["stations"]
+
     sensors = []
 
-    # Get configured units for this entry (fallback to defaults)
     su = entry.data.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
     tu = entry.data.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
-
-    # Map temperature unit to display unit
     temp_display_unit = "°C" if tu == "C" else "°F"
 
-    # Build the list of stations (CONF_STATION_IDS is required)
-    stations = entry.data.get(CONF_STATION_IDS, [])
-
     for station in stations:
-        coordinator = coordinators.get(str(station))
-        if not coordinator:
-            continue
-
         for key, (name, device_class) in SENSOR_TYPES.items():
             if key == "temperature":
                 unit = temp_display_unit
@@ -46,10 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 unit = su
             else:
                 unit = None
-
-            sensors.append(
-                HolfuySensor(coordinator, key, name, unit, device_class, station)
-            )
+            sensors.append(HolfuySensor(coordinator, key, name, unit, device_class, station))
 
     async_add_entities(sensors)
 
@@ -62,7 +50,6 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
         self._unit = unit
         self._device_class = device_class
         self._station_id = str(station_id)
-        # stable unique id for the entity
         self._unique_id = f"{self._station_id}_{self._key}"
 
     @property
@@ -75,10 +62,11 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
-        data = self.coordinator.data
-        if not data:
+        data_map = self.coordinator.data or {}
+        station_data = data_map.get(self._station_id)
+        if not station_data:
             return None
-        wind = data.get("wind", {})
+        wind = station_data.get("wind", {}) if isinstance(station_data, dict) else {}
         if self._key == "wind_speed":
             return wind.get("speed")
         elif self._key == "wind_gust":
@@ -88,7 +76,8 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
         elif self._key == "wind_direction":
             return wind.get("direction")
         elif self._key == "temperature":
-            return data.get("temperature")
+            return station_data.get("temperature")
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -100,22 +89,20 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        data = self.coordinator.data or {}
+        data_map = self.coordinator.data or {}
+        station_data = data_map.get(self._station_id, {})
         return {
-            "station_name": data.get("stationName"),
-            "last_update": data.get("dateTime"),
+            "station_name": station_data.get("stationName"),
+            "last_update": station_data.get("dateTime"),
         }
 
     @property
     def device_info(self):
-        """Return device information for this entity.
-
-        Entities that return the same identifiers will be grouped under the same device.
-        """
-        data = self.coordinator.data or {}
-        station_name = data.get("stationName") or f"Holfuy {self._station_id}"
+        data_map = self.coordinator.data or {}
+        station_data = data_map.get(self._station_id, {}) or {}
+        station_name = station_data.get("stationName") or f"Holfuy {self._station_id}"
         return {
-            "identifiers": {(DOMAIN, self._station_id)},  # unique device identifier per station
+            "identifiers": {(DOMAIN, self._station_id)},
             "name": station_name,
             "manufacturer": "Holfuy",
             "model": "Weather Station",
