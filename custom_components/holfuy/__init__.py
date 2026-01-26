@@ -50,5 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, ["sensor"])
+    # Forward setup to platforms (preferred API). Use a fallback for older HA versions.
+    platforms = ["sensor"]
+    if hasattr(hass.config_entries, "async_forward_entry_setups"):
+        # Newer API: pass a list of platforms
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    else:
+        # Older API: forward platforms one-by-one
+        for platform in platforms:
+            await hass.config_entries.async_forward_entry_setup(entry, platform)
+
     return True
