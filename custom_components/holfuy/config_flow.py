@@ -1,3 +1,4 @@
+import re
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
@@ -17,14 +18,23 @@ MAX_STATION_ID = 65000
 
 
 def _normalize_station_input(value: str):
-    """Split comma-separated station ids, strip whitespace, drop empties, trim duplicates,
-    ensure max count and valid ranges.
+    """Extract integers from the provided string, trim duplicates and validate.
 
+    Accepts inputs like:
+      - "601,602"
+      - "601, 602"
+      - "601;602"
+      - "[601,602]"
+      - "601\n602"
+      - "601 602"
     Returns a list of station id strings.
     Raises vol.Invalid("invalid_station_ids") on validation errors.
     """
-    parts = [p.strip() for p in value.split(",")]
-    parts = [p for p in parts if p]
+    if not isinstance(value, str) or not value.strip():
+        raise vol.Invalid("invalid_station_ids")
+
+    # Find all integer substrings
+    parts = re.findall(r"\d+", value)
     if not parts:
         raise vol.Invalid("invalid_station_ids")
 
@@ -42,13 +52,11 @@ def _normalize_station_input(value: str):
 
     normalized = []
     for p in unique_parts:
-        try:
-            n = int(p)
-        except ValueError:
-            raise vol.Invalid("invalid_station_ids")
+        n = int(p)
         if n < 0 or n > MAX_STATION_ID:
             raise vol.Invalid("invalid_station_ids")
         normalized.append(str(n))  # store as string for consistency
+
     return normalized
 
 
