@@ -6,7 +6,6 @@ from .const import (
     CONF_TEMP_UNIT,
     DEFAULT_WIND_UNIT,
     DEFAULT_TEMP_UNIT,
-    CONF_STATION_IDS,
 )
 
 SENSOR_TYPES = {
