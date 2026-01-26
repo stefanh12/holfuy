@@ -1,10 +1,16 @@
+import logging
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import aiohttp
 import async_timeout
+
 from .const import DOMAIN, API_URL, CONF_API_KEY, CONF_STATION_ID
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api_key = entry.data[CONF_API_KEY]
@@ -22,10 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     coordinator = DataUpdateCoordinator(
         hass,
-        hass.helpers.event.async_track_time_interval,
+        _LOGGER,
         name="Holfuy Weather",
         update_method=async_update_data,
-        update_interval=hass.helpers.event.dt.timedelta(minutes=2),
+        update_interval=timedelta(minutes=2),
     )
 
     await coordinator.async_config_entry_first_refresh()
