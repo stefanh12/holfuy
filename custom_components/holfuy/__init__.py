@@ -209,22 +209,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "stations": [str(s) for s in stations],
     }
 
-    platforms = ["sensor"]
-    if hasattr(hass.config_entries, "async_forward_entry_setups"):
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
-    else:
-        for platform in platforms:
-            await hass.config_entries.async_forward_entry_setup(entry, platform)
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload an entry: unload platforms and clear coordinator."""
-    if hasattr(hass.config_entries, "async_unload_platforms"):
-        unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor"])
-    else:
-        unload_ok = True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor"])
 
-    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok

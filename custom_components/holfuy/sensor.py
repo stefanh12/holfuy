@@ -1,4 +1,13 @@
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    UnitOfSpeed,
+    UnitOfTemperature,
+    DEGREE,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DOMAIN,
@@ -9,15 +18,53 @@ from .const import (
 )
 
 SENSOR_TYPES = {
-    "wind_speed": ("Wind Speed", None),
-    "wind_gust": ("Wind Gust", None),
-    "wind_min": ("Wind Min", None),
-    "wind_direction": ("Wind Direction", None),
-    "temperature": ("Temperature", "temperature"),
+    "wind_speed": {
+        "name": "Wind Speed",
+        "device_class": SensorDeviceClass.WIND_SPEED,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:weather-windy",
+    },
+    "wind_gust": {
+        "name": "Wind Gust",
+        "device_class": SensorDeviceClass.WIND_SPEED,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:weather-windy",
+    },
+    "wind_min": {
+        "name": "Wind Min",
+        "device_class": SensorDeviceClass.WIND_SPEED,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:weather-windy",
+    },
+    "wind_direction": {
+        "name": "Wind Direction",
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:compass",
+    },
+    "temperature": {
+        "name": "Temperature",
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:thermometer",
+    },
+}
+
+# Map custom wind units to HA standard units
+WIND_UNIT_MAP = {
+    "m/s": UnitOfSpeed.METERS_PER_SECOND,
+    "km/h": UnitOfSpeed.KILOMETERS_PER_HOUR,
+    "mph": UnitOfSpeed.MILES_PER_HOUR,
+    "knots": UnitOfSpeed.KNOTS,
+}
+
+TEMP_UNIT_MAP = {
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
 }
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Holfuy sensors from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
     coordinator = entry_data["coordinator"]
     stations = entry_data["stations"]
@@ -26,41 +73,49 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     su = entry.data.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
     tu = entry.data.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
-    temp_display_unit = "°C" if tu == "C" else "°F"
+
+    # Map to HA standard units
+    wind_unit = WIND_UNIT_MAP.get(su, UnitOfSpeed.METERS_PER_SECOND)
+    temp_unit = TEMP_UNIT_MAP.get(tu, UnitOfTemperature.CELSIUS)
 
     for station in stations:
-        for key, (name, device_class) in SENSOR_TYPES.items():
+        for key, sensor_config in SENSOR_TYPES.items():
             if key == "temperature":
-                unit = temp_display_unit
+                unit = temp_unit
             elif key in ("wind_speed", "wind_gust", "wind_min"):
-                unit = su
+                unit = wind_unit
+            elif key == "wind_direction":
+                unit = DEGREE
             else:
                 unit = None
-            sensors.append(HolfuySensor(coordinator, key, name, unit, device_class, station))
+            sensors.append(HolfuySensor(coordinator, key, sensor_config, unit, station))
 
     async_add_entities(sensors)
 
 
 class HolfuySensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, key, name, unit, device_class, station_id):
+    """Representation of a Holfuy sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, key, sensor_config, unit, station_id):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._key = key
-        self._name = name
-        self._unit = unit
-        self._device_class = device_class
+        self._sensor_config = sensor_config
+        self._attr_native_unit_of_measurement = unit
         self._station_id = str(station_id)
-        self._unique_id = f"{self._station_id}_{self._key}"
+        self._attr_unique_id = f"{DOMAIN}_{self._station_id}_{self._key}"
+
+        # Set device class and state class from config
+        self._attr_device_class = sensor_config.get("device_class")
+        self._attr_state_class = sensor_config.get("state_class")
+        self._attr_icon = sensor_config.get("icon")
+        self._attr_name = sensor_config["name"]
 
     @property
-    def unique_id(self):
-        return self._unique_id
-
-    @property
-    def name(self):
-        return f"Holfuy {self._name} ({self._station_id})"
-
-    @property
-    def state(self):
+    def native_value(self):
+        """Return the state of the sensor."""
         data_map = self.coordinator.data or {}
         station_data = data_map.get(self._station_id)
         if not station_data:
@@ -79,15 +134,8 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
-        return self._unit
-
-    @property
-    def device_class(self):
-        return self._device_class
-
-    @property
     def extra_state_attributes(self):
+        """Return additional state attributes."""
         data_map = self.coordinator.data or {}
         station_data = data_map.get(self._station_id, {})
         return {
@@ -97,9 +145,10 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
+        """Return device information."""
         data_map = self.coordinator.data or {}
         station_data = data_map.get(self._station_id, {}) or {}
-        station_name = station_data.get("stationName") or f"Holfuy {self._station_id}"
+        station_name = station_data.get("stationName") or f"Station {self._station_id}"
         return {
             "identifiers": {(DOMAIN, self._station_id)},
             "name": station_name,
