@@ -23,13 +23,14 @@ This integration:
 - **Supports multiple stations** (up to 3) in a single API call for efficient polling
 - **Creates individual sensors** for each station and each measurement type (wind speed, gust, min, direction, temperature)
 - **Uses a DataUpdateCoordinator** for efficient background updates and automatic error handling
-- **Configurable units** - Choose your preferred wind speed unit (m/s, knots, km/h, mph) and temperature unit (°C, °F)
+- **Configurable units** - Choose your preferred wind speed unit (m/s, knots, km/h, mph) and temperature unit (°C, °F) during setup
 - **Config flow integration** - Easy setup through the Home Assistant UI with validation of station IDs
 - **Live API validation** - Validates API key and station IDs during setup by making actual API calls
 
 ### Technical Details
 
-- API requests include unit parameters (`tu` for temperature, `su` for wind speed)
+- API requests include unit parameters (`tu` for temperature, `su` for wind speed) based on your selection
+- The integration requests data from the API in your chosen units and displays them directly
 - Attempts combined API calls first for efficiency, falls back to individual station requests if needed
 - Handles various API response formats (dict, list, combined or individual station data)
 - Station IDs are validated (0-65000 range) and duplicates are automatically removed
@@ -54,7 +55,11 @@ This integration:
 - **Intelligent error handling**:
   - Automatic API throttling with exponential backoff on errors
   - Self-recovery when API becomes available again
-  - Prevents excessive API calls during outages
+    **Configurable units** - Select your preferred wind speed (m/s, knots, km/h, mph) and temperature units (°C, °F)
+  - Units are set during integration setup and can be changed via Options
+  - **Important for Sweden and other regions**: Choose m/s for wind speed since Home Assistant's default Metric system shows km/h
+  - Wind sensors display in the exact unit you select from the API
+  - Temperature sensors use device class for proper display in Home Assistant
 - Configurable units for wind speed and temperature
 - **Real-time validation** during setup:
   - API key verification
@@ -79,12 +84,17 @@ This integration:
 ## Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration → Holfuy**.
-2. Enter:**validate your credentials** by testing the API key and each station ID:
+2. Enter:
+   - **API Key** - Your Holfuy API key
+   - **Station IDs** (comma-separated, e.g., `601, 1435, 2045`) - up to 3 stations
+   - **Wind Speed Unit** - Choose m/s, knots, km/h, or mph
+3. Once validated, sensors will be created for each station in your selected units.
+4. You can modify the configuration (including units)your credentials\*\* by testing the API key and each station ID:
    - Verifies the API key is valid and authorized
    - Confirms each station ID is accessible with your API key
    - Displays specific error messages if validation fails (invalid API key, inaccessible stations, connection issues, etc.)
-3. Once validated, sensors will be created for each station.
-4. You can modify the configuration later via **Devices & Services → Holfuy → Configure**.
+5. Once validated, sensors will be created for each station.
+6. You can modify the configuration later via **Devices & Services → Holfuy → Configure**.
 
 ### Validation Errors
 
@@ -95,12 +105,17 @@ During setup, you may encounter these validation errors:
 - **Cannot connect** - Unable to reach the Holfuy API (check your internet connection)
 - **Timeout** - API request took too long (try again)
 - **Invalid station IDs format** - Station IDs must be integers between 0 and 65000
-  - **Station IDs** (comma-separated, e.g., `601, 1435, 2045`) - up to 3 stations
-  - **Wind Speed Unit** (m/s, knots, km/h, or mph)
-  - **Temperature Unit** (°C or °F)
 
-3. The integration will validate your station IDs and create sensors for each station.
-4. You can modify the configuration later via **Devices & Services → Holfuy → Configure**.
+### Unit Selection
+
+When setting up the integration, you'll choose units for:
+
+- **Wind Speed**: m/s, knots, km/h, or mph
+- **Temperature**: °C or °F
+
+**Regional Note**: If you're in Sweden or other regions that use m/s for wind speed, be sure to select **m/s** during setup. Home Assistant's default Metric system uses km/h for wind, so selecting your preferred unit ensures the data displays correctly.
+
+You can change units anytime via **Devices & Services → Holfuy → Configure**.
 
 ## Example Sensors
 
