@@ -9,6 +9,8 @@ jobs:
   hass-smoke:
     runs-on: ubuntu-latest
     name: Home Assistant startup smoke test
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
