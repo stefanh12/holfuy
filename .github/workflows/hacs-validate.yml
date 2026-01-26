@@ -37,6 +37,7 @@ jobs:
           comp = os.environ.get("COMPONENT_PATH", "custom_components/holfuy")
           manifest_path = os.path.join(comp, "manifest.json")
           strings_path = os.path.join(comp, "strings.json")
+          translations_en_path = os.path.join(comp, "translations", "en.json")
           cfg_flow = os.path.join(comp, "config_flow.py")
 
           def fail(msg):
@@ -62,26 +63,34 @@ jobs:
               if not os.path.exists(cfg_flow):
                   fail("manifest.json declares config_flow:true but config_flow.py is missing")
 
-          # strings.json presence and minimal keys
-          if not os.path.exists(strings_path):
-              fail("strings.json is missing; add translations to show UI descriptions")
-
-          try:
-              strings = json.load(open(strings_path, "r", encoding="utf-8"))
-          except Exception as e:
-              fail(f"Failed to parse strings.json: {e}")
+          # strings.json presence and minimal keys OR translations/en.json
+          strings = None
+          if os.path.exists(strings_path):
+              try:
+                  strings = json.load(open(strings_path, "r", encoding="utf-8"))
+              except Exception as e:
+                  fail(f"Failed to parse strings.json: {e}")
+          elif os.path.exists(translations_en_path):
+              try:
+                  en_data = json.load(open(translations_en_path, "r", encoding="utf-8"))
+                  # wrap translations/en.json contents under an "en" key to reuse downstream checks
+                  strings = {"en": en_data}
+              except Exception as e:
+                  fail(f"Failed to parse translations/en.json: {e}")
+          else:
+              fail("strings.json is missing; add translations to show UI descriptions (expected custom_components/holfuy/strings.json or custom_components/holfuy/translations/en.json)")
 
           # Check english keys exist for UI steps (user and init)
           en = strings.get("en")
           if not en:
-              fail("strings.json must include an 'en' translation object")
+              fail("strings.json/translations must include an 'en' translation object")
 
           try:
               user_step = en["config"]["step"]["user"]
               if not user_step.get("description"):
-                  fail("strings.json: expected config.step.user.description")
+                  fail("strings.json/translations: expected config.step.user.description")
           except Exception:
-              fail("strings.json: expected config.step.user description keys")
+              fail("strings.json/translations: expected config.step.user description keys")
 
           # Basic sanity checks on API_URL in const.py (optional)
           const_path = os.path.join(comp, "const.py")
