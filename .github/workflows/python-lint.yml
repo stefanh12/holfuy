@@ -1,0 +1,30 @@
+# Basic lint workflow using ruff (fast). Helps show code quality and catches simple issues.
+on:
+  pull_request:
+    paths:
+      - "custom_components/holfuy/**"
+  push:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Python lint (ruff)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run ruff
+        run: |
+          # Lint only the integration folder
+          ruff check custom_components/holfuy || (echo "ruff found issues" && exit 1)
