@@ -1,5 +1,6 @@
 {
   "en": {
+    "title": "Holfuy Weather",
     "config": {
       "step": {
         "user": {
@@ -19,7 +20,26 @@
         },
         "init": {
           "title": "Holfuy Options",
-          "description": "Update your API key and Station IDs (up to 3, comma-separated). Example: 601,602",
+          "description": "Configure Holfuy options",
+          "data": {
+            "api_key": "API Key",
+            "station_ids": "Station IDs (comma-separated)",
+            "wind_unit": "Wind speed unit",
+            "temp_unit": "Temperature unit"
+          },
+          "errors": {
+            "base": {
+              "invalid_station_ids": "Station IDs must be integers between 0 and 65000, up to 3 values, comma-separated. Duplicates will be removed."
+            }
+          }
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Holfuy Options",
+          "description": "Update API key, Station IDs and units",
           "data": {
             "api_key": "API Key",
             "station_ids": "Station IDs (comma-separated)",
