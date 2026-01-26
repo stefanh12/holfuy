@@ -13,7 +13,12 @@
       }
     },
     "error": {
-      "invalid_station_ids": "Station IDs must be integers between 0 and 65000, up to 3 values, comma-separated. Duplicates will be removed."
+      "invalid_station_ids": "Station IDs must be integers between 0 and 65000, up to 3 values, comma-separated. Duplicates will be removed.",
+      "invalid_api_key": "Invalid API key. Please check your API key and try again.",
+      "invalid_station_id": "One or more station IDs are invalid or not accessible with this API key.",
+      "cannot_connect": "Cannot connect to Holfuy API. Please check your internet connection.",
+      "timeout": "Request to Holfuy API timed out. Please try again.",
+      "unknown": "Unknown error occurred while validating API credentials."
     }
   },
   "options": {
@@ -30,7 +35,12 @@
       }
     },
     "error": {
-      "invalid_station_ids": "Station IDs must be integers between 0 and 65000, up to 3 values, comma-separated. Duplicates will be removed."
+      "invalid_station_ids": "Station IDs must be integers between 0 and 65000, up to 3 values, comma-separated. Duplicates will be removed.",
+      "invalid_api_key": "Invalid API key. Please check your API key and try again.",
+      "invalid_station_id": "One or more station IDs are invalid or not accessible with this API key.",
+      "cannot_connect": "Cannot connect to Holfuy API. Please check your internet connection.",
+      "timeout": "Request to Holfuy API timed out. Please try again.",
+      "unknown": "Unknown error occurred while validating API credentials."
     }
   }
 }
