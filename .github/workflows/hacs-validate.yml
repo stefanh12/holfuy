@@ -1,5 +1,4 @@
-# Workflow: validate manifest.json, strings.json and integration layout for HACS
-# Triggers on pushes and PRs so maintainers/reviewers see immediate feedback.
+name: HACS integration validation
 on:
   push:
     branches: [main, master]
@@ -12,6 +11,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     name: HACS integration validation
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +22,12 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Run validation script
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install hassfest
+
+      - name: Run repository validation script
         env:
           COMPONENT_PATH: custom_components/holfuy
         run: |
@@ -88,3 +94,9 @@ jobs:
           # If reached here, validation passed
           print("Validation OK")
           PY
+
+      - name: Run hassfest
+        # hassfest performs a series of static checks for Home Assistant integrations
+        run: |
+          echo "Running hassfest..."
+          hassfest -i custom_components/holfuy

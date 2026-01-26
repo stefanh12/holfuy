@@ -1,0 +1,62 @@
+name: Home Assistant startup smoke test
+on:
+  pull_request:
+    paths:
+      - "custom_components/holfuy/**"
+  workflow_dispatch:
+
+jobs:
+  hass-smoke:
+    runs-on: ubuntu-latest
+    name: Home Assistant startup smoke test
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx (for Docker usage)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Pull Home Assistant image
+        run: docker pull ghcr.io/home-assistant/home-assistant:stable
+
+      - name: Run Home Assistant container (background)
+        # mount repository into /config so custom_components/holfuy is present
+        run: |
+          docker run --name hass-smoke-test -d \
+            -v "${GITHUB_WORKSPACE}:/config" \
+            --rm \
+            ghcr.io/home-assistant/home-assistant:stable || (docker logs hass-smoke-test || true; exit 1)
+
+      - name: Wait for startup (poll logs up to 180s)
+        run: |
+          set -e
+          echo "Waiting up to 180s for Home Assistant to signal startup..."
+          for i in $(seq 1 36); do
+            sleep 5
+            docker logs hass-smoke-test > hass_logs.txt 2>&1 || true
+            if grep -i -E "Home Assistant (core )?(started|is running|started successfully|started)" hass_logs.txt >/dev/null 2>&1; then
+              echo "Home Assistant startup detected in logs."
+              break
+            fi
+            echo "Still waiting... ($i)"
+            if [ "$i" -eq 36 ]; then
+              echo "Timeout waiting for Home Assistant startup. Showing last logs:"
+              tail -n 200 hass_logs.txt || true
+              docker logs hass-smoke-test || true
+              exit 1
+            fi
+          done
+
+      - name: Collect logs (always)
+        if: always()
+        run: |
+          echo "----- hass logs -----"
+          docker logs hass-smoke-test || true
+          echo "---------------------"
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop hass-smoke-test || true
