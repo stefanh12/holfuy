@@ -4,9 +4,9 @@
   "codeowners": ["@stefanh12"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/stefanh12/holfuy-homeassistant",
-  "issue_tracker": "https://github.com/stefanh12/holfuy-homeassistant/issues",
+  "documentation": "https://github.com/stefanh12/holfuy/",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/stefanh12/holfuy/issues",
   "requirements": [],
   "version": "1.4.0"
 }
