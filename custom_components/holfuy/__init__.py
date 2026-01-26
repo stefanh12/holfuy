@@ -141,16 +141,15 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                     mapping[str(station)] = res
 
                 # If we got at least some data, reset error counter
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Holfuy Weather ({entry.entry_id})",
-        update_method=lambda: None,  # Placeholder, will be set below
-        update_interval=DEFAULT_UPDATE_INTERVAL,
-    )
+                if mapping:
+                    consecutive_errors = 0
+                    if coordinator.update_interval != DEFAULT_UPDATE_INTERVAL:
+                        coordinator.update_interval = DEFAULT_UPDATE_INTERVAL
+                        _LOGGER.info("API calls successful, restored normal update interval")
+                    return mapping
 
-    # Set the actual update method with coordinator reference for throttling
-    coordinator.update_method = _make_update_method(api_key, stations, tu, su, coordinator            if has_errors:
+                # All stations failed
+                if has_errors:
                     raise UpdateFailed("All station requests failed")
 
                 return mapping
@@ -187,15 +186,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     su = entry.data.get(CONF_WIND_UNIT, DEFAULT_WIND_UNIT)
     tu = entry.data.get(CONF_TEMP_UNIT, DEFAULT_TEMP_UNIT)
 
-    update_method = _make_update_method(api_key, stations, tu, su)
-
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Holfuy Weather ({entry.entry_id})",
-        update_method=update_method,
-        update_interval=timedelta(minutes=2),
+        update_method=lambda: None,  # Placeholder, will be set below
+        update_interval=DEFAULT_UPDATE_INTERVAL,
     )
+
+    # Set the actual update method with coordinator reference for throttling
+    coordinator.update_method = _make_update_method(api_key, stations, tu, su, coordinator)
 
     try:
         await coordinator.async_config_entry_first_refresh()
