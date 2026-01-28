@@ -157,12 +157,7 @@ class HolfuyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(step_id="user", data_schema=schema, errors={"base": error_key})
 
             data = {**user_input, CONF_STATION_IDS: stations}
-            
-            # Get the entry_id from the created entry and clear any repair issues
-            # Note: This is during initial setup, so there shouldn't be any issues yet
-            # but we clear them anyway to be safe
-            entry = self.async_create_entry(title="Holfuy", data=data)
-            return entry
+            return self.async_create_entry(title="Holfuy", data=data)
 
         return self.async_show_form(step_id="user", data_schema=schema)
 

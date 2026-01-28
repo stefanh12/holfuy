@@ -43,15 +43,10 @@ async def _fetch_json(session: aiohttp.ClientSession, url: str):
                 
                 resp.raise_for_status()  # Raise exception for HTTP errors
                 
-                try:
-                    return await resp.json()
-                except aiohttp.ContentTypeError as err:
-                    raise UpdateFailed(f"Invalid JSON response: {err}|||invalid_response")
+                return await resp.json()
     except aiohttp.ContentTypeError as err:
         raise UpdateFailed(f"Invalid JSON response: {err}|||invalid_response")
     except aiohttp.ClientResponseError as err:
-        if err.status in (401, 403):
-            raise UpdateFailed(f"Authentication error {err.status}: {err.message}|||auth")
         raise UpdateFailed(f"HTTP error {err.status}: {err.message}|||http_error")
     except aiohttp.ClientError as err:
         raise UpdateFailed(f"Connection error: {err}|||connection")
@@ -227,12 +222,16 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                 # Handle authentication errors
                 if auth_error:
                     await repairs.async_create_auth_failure_issue(hass, entry_id)
-                    raise UpdateFailed("Authentication failed for one or more stations")
+                    # Don't fail completely if we have partial data from other stations
+                    if not mapping:
+                        raise UpdateFailed("Authentication failed for all stations")
                 
                 # Handle invalid response errors
                 if invalid_response:
                     await repairs.async_create_invalid_response_issue(hass, entry_id)
-                    raise UpdateFailed("Invalid response format for one or more stations")
+                    # Don't fail completely if we have partial data from other stations
+                    if not mapping:
+                        raise UpdateFailed("Invalid response format for all stations")
 
                 # If we got at least some data, reset error counter
                 if mapping:

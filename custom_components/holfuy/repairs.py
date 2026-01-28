@@ -32,9 +32,6 @@ async def async_create_auth_failure_issue(hass: HomeAssistant, entry_id: str) ->
         is_fixable=True,
         severity=ir.IssueSeverity.CRITICAL,
         translation_key="auth_failure",
-        translation_placeholders={
-            "entry_id": entry_id,
-        },
     )
     _LOGGER.warning("Created repair issue for authentication failure (entry: %s)", entry_id)
 
@@ -60,7 +57,6 @@ async def async_create_station_inaccessible_issue(
         severity=ir.IssueSeverity.WARNING,
         translation_key="station_inaccessible",
         translation_placeholders={
-            "entry_id": entry_id,
             "station_id": station_id,
         },
     )
@@ -85,9 +81,6 @@ async def async_create_api_connection_failure_issue(hass: HomeAssistant, entry_i
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="api_connection_failure",
-        translation_placeholders={
-            "entry_id": entry_id,
-        },
     )
     _LOGGER.warning("Created repair issue for persistent API connection failures (entry: %s)", entry_id)
 
@@ -110,9 +103,6 @@ async def async_create_invalid_response_issue(hass: HomeAssistant, entry_id: str
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="invalid_response",
-        translation_placeholders={
-            "entry_id": entry_id,
-        },
     )
     _LOGGER.warning("Created repair issue for invalid API response (entry: %s)", entry_id)
 
