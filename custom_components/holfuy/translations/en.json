@@ -60,7 +60,7 @@
     },
     "invalid_response": {
       "title": "Holfuy API Response Format Error",
-      "description": "Holfuy API returned invalid data format. Please try again later."
+      "description": "Holfuy API returned invalid data format. The integration will retry automatically."
     }
   }
 }
