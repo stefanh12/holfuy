@@ -18,6 +18,7 @@
       "invalid_station_id": "Un ou plusieurs IDs de station sont invalides ou inaccessibles avec cette clé API.",
       "cannot_connect": "Impossible de se connecter à l'API Holfuy. Veuillez vérifier votre connexion Internet.",
       "timeout": "La requête vers l'API Holfuy a expiré. Veuillez réessayer.",
+      "invalid_response": "L'API a renvoyé des données invalides ou mal formées. Veuillez réessayer plus tard.",
       "unknown": "Une erreur inconnue s'est produite lors de la validation des identifiants API."
     }
   },
@@ -40,25 +41,26 @@
       "invalid_station_id": "Un ou plusieurs IDs de station sont invalides ou inaccessibles avec cette clé API.",
       "cannot_connect": "Impossible de se connecter à l'API Holfuy. Veuillez vérifier votre connexion Internet.",
       "timeout": "La requête vers l'API Holfuy a expiré. Veuillez réessayer.",
+      "invalid_response": "L'API a renvoyé des données invalides ou mal formées. Veuillez réessayer plus tard.",
       "unknown": "Une erreur inconnue s'est produite lors de la validation des identifiants API."
     }
   },
   "issues": {
     "auth_failure": {
-      "title": "Holfuy API Authentication Failed",
-      "description": "The Holfuy API key is invalid or expired. Authentication failed with error code 401 or 403.\n\nPlease update your API key in the integration settings to restore functionality.\n\nTo update your API key:\n1. Go to Settings → Devices & Services\n2. Find the Holfuy integration\n3. Click Configure\n4. Enter a valid API key\n\nIf you don't have an API key, visit https://api.holfuy.com/ for information on obtaining one."
+      "title": "Échec de l'authentification de l'API Holfuy",
+      "description": "Clé API Holfuy invalide ou expirée. Veuillez mettre à jour votre clé API dans les paramètres de l'intégration."
     },
     "station_inaccessible": {
-      "title": "Holfuy Station {station_id} is Inaccessible",
-      "description": "Station {station_id} is consistently returning errors or is not accessible with your current API key.\n\nThis may occur if:\n- The station ID is incorrect\n- The station is not included in your API key subscription\n- The station is temporarily offline\n\nTo resolve this issue:\n1. Go to Settings → Devices & Services\n2. Find the Holfuy integration\n3. Click Configure\n4. Remove or correct the problematic station ID\n\nNote: Other stations may still be working correctly."
+      "title": "La station Holfuy {station_id} est inaccessible",
+      "description": "La station {station_id} n'est pas accessible avec votre clé API actuelle."
     },
     "api_connection_failure": {
-      "title": "Holfuy API Connection Issues",
-      "description": "The Holfuy integration is experiencing persistent connection failures to the API.\n\nPossible causes:\n- Network connectivity issues\n- Holfuy API service outage\n- Firewall or network restrictions\n\nThe integration will continue to retry automatically with increasing intervals. Updates have been throttled to reduce load.\n\nIf the issue persists:\n- Check your internet connection\n- Verify the Holfuy API status at https://holfuy.com/\n- Check Home Assistant logs for detailed error messages\n\nThis issue will automatically resolve when the API becomes accessible again."
+      "title": "Problèmes de connexion à l'API Holfuy",
+      "description": "Impossible de se connecter à l'API Holfuy. L'intégration réessayera automatiquement."
     },
     "invalid_response": {
-      "title": "Holfuy API Response Format Error",
-      "description": "The Holfuy API is returning data in an unexpected or invalid format that cannot be parsed.\n\nThis may indicate:\n- Temporary API issues\n- API changes or updates\n- Station configuration problems\n\nThe integration will continue to retry automatically. If this issue persists:\n- Check the Holfuy API status at https://holfuy.com/\n- Review Home Assistant logs for specific error details\n- Consider reporting the issue at https://github.com/stefanh12/holfuy/issues\n\nThis issue will automatically resolve when valid responses are received."
+      "title": "Erreur de format de réponse de l'API Holfuy",
+      "description": "L'API Holfuy a renvoyé un format de données invalide. L'intégration réessayera automatiquement."
     }
   }
 }

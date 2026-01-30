@@ -18,6 +18,7 @@
       "invalid_station_id": "Yksi tai useampi asema-ID on virheellinen tai ei ole käytettävissä tällä API-avaimella.",
       "cannot_connect": "Ei voida yhdistää Holfuy API:in. Tarkista internet-yhteytesi.",
       "timeout": "Pyyntö Holfuy API:lle aikakatkaistiin. Yritä uudelleen.",
+      "invalid_response": "API palautti virheellisen tai väärin muotoillun datan. Yritä uudelleen myöhemmin.",
       "unknown": "Tuntematon virhe tapahtui API-tunnistetietojen vahvistamisessa."
     }
   },
@@ -40,25 +41,26 @@
       "invalid_station_id": "Yksi tai useampi asema-ID on virheellinen tai ei ole käytettävissä tällä API-avaimella.",
       "cannot_connect": "Ei voida yhdistää Holfuy API:in. Tarkista internet-yhteytesi.",
       "timeout": "Pyyntö Holfuy API:lle aikakatkaistiin. Yritä uudelleen.",
+      "invalid_response": "API palautti virheellisen tai väärin muotoillun datan. Yritä uudelleen myöhemmin.",
       "unknown": "Tuntematon virhe tapahtui API-tunnistetietojen vahvistamisessa."
     }
   },
   "issues": {
     "auth_failure": {
-      "title": "Holfuy API Authentication Failed",
-      "description": "The Holfuy API key is invalid or expired. Authentication failed with error code 401 or 403.\n\nPlease update your API key in the integration settings to restore functionality.\n\nTo update your API key:\n1. Go to Settings → Devices & Services\n2. Find the Holfuy integration\n3. Click Configure\n4. Enter a valid API key\n\nIf you don't have an API key, visit https://api.holfuy.com/ for information on obtaining one."
+      "title": "Holfuy API -todennus epäonnistui",
+      "description": "Virheellinen tai vanhentunut Holfuy API-avain. Päivitä API-avaimesi integraation asetuksissa."
     },
     "station_inaccessible": {
-      "title": "Holfuy Station {station_id} is Inaccessible",
-      "description": "Station {station_id} is consistently returning errors or is not accessible with your current API key.\n\nThis may occur if:\n- The station ID is incorrect\n- The station is not included in your API key subscription\n- The station is temporarily offline\n\nTo resolve this issue:\n1. Go to Settings → Devices & Services\n2. Find the Holfuy integration\n3. Click Configure\n4. Remove or correct the problematic station ID\n\nNote: Other stations may still be working correctly."
+      "title": "Holfuy-asema {station_id} ei ole käytettävissä",
+      "description": "Asema {station_id} ei ole käytettävissä nykyisellä API-avaimellasi."
     },
     "api_connection_failure": {
-      "title": "Holfuy API Connection Issues",
-      "description": "The Holfuy integration is experiencing persistent connection failures to the API.\n\nPossible causes:\n- Network connectivity issues\n- Holfuy API service outage\n- Firewall or network restrictions\n\nThe integration will continue to retry automatically with increasing intervals. Updates have been throttled to reduce load.\n\nIf the issue persists:\n- Check your internet connection\n- Verify the Holfuy API status at https://holfuy.com/\n- Check Home Assistant logs for detailed error messages\n\nThis issue will automatically resolve when the API becomes accessible again."
+      "title": "Holfuy API -yhteysongelmia",
+      "description": "Ei voida yhdistää Holfuy API:in. Integraatio yrittää automaattisesti uudelleen."
     },
     "invalid_response": {
-      "title": "Holfuy API Response Format Error",
-      "description": "The Holfuy API is returning data in an unexpected or invalid format that cannot be parsed.\n\nThis may indicate:\n- Temporary API issues\n- API changes or updates\n- Station configuration problems\n\nThe integration will continue to retry automatically. If this issue persists:\n- Check the Holfuy API status at https://holfuy.com/\n- Review Home Assistant logs for specific error details\n- Consider reporting the issue at https://github.com/stefanh12/holfuy/issues\n\nThis issue will automatically resolve when valid responses are received."
+      "title": "Holfuy API -vastausmuotovirhe",
+      "description": "Holfuy API palautti virheellisen datamuodon. Integraatio yrittää automaattisesti uudelleen."
     }
   }
 }
