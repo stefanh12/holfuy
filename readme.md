@@ -16,6 +16,7 @@ Holfuy is a network of real-time weather stations specifically designed for avia
 - **API access** for developers to integrate station data into their applications
 
 Instructions on how to obtain an API key can be found here: https://api.holfuy.com/
+This integration is not created by Holfuy but it has been reviewed by the Holfuy team.
 
 **To use the integration you need an API key from Holfuy!** You need to contact Holfuy to obtain the key and the key is valid for up to 3 stations.
 
