@@ -76,7 +76,7 @@ This integration:
 
 1. Go to **HACS → Integrations → Custom Repositories**.
 2. Add your repository URL:
-   `https://github.com/stefanh12/holfuy-homeassistant`
+   `https://github.com/stefanh12/holfuy`
 3. Select **Integration**.
 4. Restart Home Assistant.
 5. Install the integration via HACS.
