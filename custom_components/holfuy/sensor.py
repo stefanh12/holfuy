@@ -8,6 +8,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     DEGREE,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DOMAIN,
@@ -87,6 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             else:
                 unit = None
             sensors.append(HolfuySensor(coordinator, key, sensor_config, unit, station))
+        sensors.append(HolfuyApiStatusSensor(coordinator, station))
 
     async_add_entities(sensors)
 
@@ -178,6 +180,74 @@ class HolfuySensor(CoordinatorEntity, SensorEntity):
             }
         except (KeyError, TypeError, AttributeError):
             return {}
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        data_map = self.coordinator.data or {}
+        station_data = data_map.get(self._station_id, {}) or {}
+        station_name = station_data.get("stationName") or f"Station {self._station_id}"
+        return {
+            "identifiers": {(DOMAIN, self._station_id)},
+            "name": station_name,
+            "manufacturer": "Holfuy",
+            "model": "Weather Station",
+        }
+
+
+class HolfuyApiStatusSensor(CoordinatorEntity, SensorEntity):
+    """Diagnostic entity reporting API status for a station."""
+
+    _attr_has_entity_name = True
+    _attr_name = "API Status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:api"
+
+    def __init__(self, coordinator, station_id):
+        """Initialize the API status sensor."""
+        super().__init__(coordinator)
+        self._station_id = str(station_id)
+        self._attr_unique_id = f"{DOMAIN}_{self._station_id}_api_status"
+
+    @property
+    def available(self):
+        """Always keep the diagnostic entity available to show failure state."""
+        return True
+
+    @property
+    def native_value(self):
+        """Return API status for this station and latest coordinator update."""
+        if not self.coordinator.last_update_success:
+            return "error"
+
+        data_map = self.coordinator.data
+        if not isinstance(data_map, dict):
+            return "no_data"
+
+        if self._station_id not in data_map:
+            return "station_unavailable"
+
+        return "ok"
+
+    @property
+    def extra_state_attributes(self):
+        """Return details helpful for diagnostics."""
+        attrs = {
+            "station_id": self._station_id,
+            "last_update_success": self.coordinator.last_update_success,
+            "update_interval_seconds": int(self.coordinator.update_interval.total_seconds()),
+        }
+
+        if self.coordinator.last_exception is not None:
+            attrs["last_error"] = str(self.coordinator.last_exception)
+
+        data_map = self.coordinator.data
+        if isinstance(data_map, dict) and self._station_id in data_map:
+            station_data = data_map.get(self._station_id) or {}
+            if isinstance(station_data, dict):
+                attrs["last_station_update"] = station_data.get("dateTime")
+
+        return attrs
 
     @property
     def device_info(self):
