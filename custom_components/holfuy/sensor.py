@@ -217,6 +217,12 @@ class HolfuyApiStatusSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return API status for this station and latest coordinator update."""
+        station_status = getattr(self.coordinator, "holfuy_station_status", None)
+        if isinstance(station_status, dict):
+            status = station_status.get(self._station_id)
+            if status:
+                return status
+
         if not self.coordinator.last_update_success:
             return "error"
 
@@ -237,6 +243,10 @@ class HolfuyApiStatusSensor(CoordinatorEntity, SensorEntity):
             "last_update_success": self.coordinator.last_update_success,
             "update_interval_seconds": int(self.coordinator.update_interval.total_seconds()),
         }
+
+        station_errors = getattr(self.coordinator, "holfuy_station_errors", None)
+        if isinstance(station_errors, dict) and station_errors.get(self._station_id):
+            attrs["station_error"] = station_errors[self._station_id]
 
         if self.coordinator.last_exception is not None:
             attrs["last_error"] = str(self.coordinator.last_exception)

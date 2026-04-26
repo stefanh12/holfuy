@@ -119,14 +119,67 @@ def _parse_combined_response(response, stations: list[str]) -> dict | None:
     return None
 
 
+def _classify_station_data(station_data) -> str:
+    """Classify station payload health for diagnostics."""
+    if not isinstance(station_data, dict):
+        return "invalid_response"
+
+    if any(k in station_data for k in ("wind", "temperature", "stationName", "dateTime")):
+        return "ok"
+
+    diagnostic_fields = []
+    for key, value in station_data.items():
+        key_l = str(key).lower()
+        if key_l in ("error", "errors", "err", "status", "message", "detail", "reason"):
+            diagnostic_fields.append(str(value).lower())
+
+    diagnostic_text = " ".join(diagnostic_fields)
+    if any(
+        marker in diagnostic_text
+        for marker in (
+            "invalid station",
+            "station not found",
+            "unknown station",
+            "does not exist",
+            "invalid id",
+            "bad station",
+        )
+    ):
+        return "invalid_station"
+
+    if diagnostic_fields:
+        return "api_error"
+
+    return "invalid_response"
+
+
 def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coordinator, hass: HomeAssistant, entry_id: str):
     """Create the update method with error tracking for throttling and repair issues."""
     consecutive_errors = 0
-    station_error_counts = {station: 0 for station in stations}
+    station_error_counts = {str(station): 0 for station in stations}
     last_error_type = None
 
     async def async_update_data():
         nonlocal consecutive_errors, last_error_type
+
+        station_status = getattr(
+            coordinator,
+            "holfuy_station_status",
+            {str(station): "unknown" for station in stations},
+        )
+        station_errors = getattr(
+            coordinator,
+            "holfuy_station_errors",
+            {str(station): None for station in stations},
+        )
+
+        for station in stations:
+            sid = str(station)
+            station_status.setdefault(sid, "unknown")
+            station_errors.setdefault(sid, None)
+
+        coordinator.holfuy_station_status = station_status
+        coordinator.holfuy_station_errors = station_errors
 
         try:
             # Try one combined request first
@@ -156,10 +209,32 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                     # Successful combined response parsed into mapping station -> data
                     consecutive_errors = 0
                     last_error_type = None
-                    
-                    # Reset station error counts
+
                     for station in stations:
-                        station_error_counts[station] = 0
+                        sid = str(station)
+                        station_data = parsed.get(sid)
+
+                        if station_data is None:
+                            station_status[sid] = "station_unavailable"
+                            station_errors[sid] = "Station not present in API response"
+                            station_error_counts[sid] += 1
+                            if station_error_counts[sid] >= 3:
+                                await repairs.async_create_station_inaccessible_issue(hass, entry_id, sid)
+                            continue
+
+                        status = _classify_station_data(station_data)
+                        station_status[sid] = status
+
+                        if status == "ok":
+                            station_errors[sid] = None
+                            station_error_counts[sid] = 0
+                            await repairs.async_delete_station_inaccessible_issue(hass, entry_id, sid)
+                            continue
+
+                        station_error_counts[sid] += 1
+                        station_errors[sid] = f"Station payload classified as {status}"
+                        if status == "invalid_station" or station_error_counts[sid] >= 3:
+                            await repairs.async_create_station_inaccessible_issue(hass, entry_id, sid)
                     
                     # Restore normal update interval on success
                     if coordinator.update_interval != DEFAULT_UPDATE_INTERVAL:
@@ -170,8 +245,6 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                     await repairs.async_delete_auth_failure_issue(hass, entry_id)
                     await repairs.async_delete_api_connection_failure_issue(hass, entry_id)
                     await repairs.async_delete_invalid_response_issue(hass, entry_id)
-                    for station in stations:
-                        await repairs.async_delete_station_inaccessible_issue(hass, entry_id, station)
                     
                     return parsed
 
@@ -189,35 +262,55 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                 invalid_response = False
                 
                 for station, res in zip(stations, results):
+                    sid = str(station)
+
                     if isinstance(res, Exception):
                         _LOGGER.warning("Error fetching data for station %s: %s", station, res)
                         has_errors = True
-                        
+
                         # Track station-specific errors
-                        station_error_counts[station] += 1
-                        
+                        station_error_counts[sid] += 1
+
                         # Parse error type if present
                         error_str = str(res)
+                        station_status[sid] = "error"
+                        station_errors[sid] = error_str
                         if "|||" in error_str:
                             error_msg, error_type = error_str.split("|||", 1)
-                            
+
                             if error_type == "auth":
                                 auth_error = True
+                                station_status[sid] = "auth_error"
+                                station_errors[sid] = error_msg
                             elif error_type == "invalid_response":
                                 invalid_response = True
-                        
+                                station_status[sid] = "invalid_response"
+                                station_errors[sid] = error_msg
+
                         # Create repair issue for station if errors persist
-                        if station_error_counts[station] >= 3:
-                            await repairs.async_create_station_inaccessible_issue(hass, entry_id, station)
-                        
+                        if station_error_counts[sid] >= 3:
+                            await repairs.async_create_station_inaccessible_issue(hass, entry_id, sid)
+
                         continue
-                    
-                    # Success - store the data
-                    mapping[str(station)] = res
-                    # Clear station error count on success
-                    station_error_counts[station] = 0
-                    # Dismiss station issue if it exists
-                    await repairs.async_delete_station_inaccessible_issue(hass, entry_id, station)
+
+                    status = _classify_station_data(res)
+                    station_status[sid] = status
+
+                    if status == "ok":
+                        # Success - store the data
+                        mapping[sid] = res
+                        station_errors[sid] = None
+                        # Clear station error count on success
+                        station_error_counts[sid] = 0
+                        # Dismiss station issue if it exists
+                        await repairs.async_delete_station_inaccessible_issue(hass, entry_id, sid)
+                        continue
+
+                    has_errors = True
+                    station_error_counts[sid] += 1
+                    station_errors[sid] = f"Station payload classified as {status}"
+                    if status == "invalid_station" or station_error_counts[sid] >= 3:
+                        await repairs.async_create_station_inaccessible_issue(hass, entry_id, sid)
 
                 # Handle authentication errors
                 if auth_error:
@@ -293,11 +386,18 @@ def _make_update_method(api_key: str, stations: list[str], tu: str, su: str, coo
                         await repairs.async_create_api_connection_failure_issue(hass, entry_id)
 
             # Re-raise with clean error message
+            clean_error = error_str
             if "|||" in error_str:
-                error_msg, _ = error_str.split("|||", 1)
-                raise UpdateFailed(f"Error fetching Holfuy data: {error_msg}")
-            
-            raise UpdateFailed(f"Error fetching Holfuy data: {err}")
+                clean_error, _ = error_str.split("|||", 1)
+
+            for station in stations:
+                sid = str(station)
+                if station_status.get(sid) == "unknown":
+                    station_status[sid] = "error"
+                if station_errors.get(sid) is None:
+                    station_errors[sid] = clean_error
+
+            raise UpdateFailed(f"Error fetching Holfuy data: {clean_error}")
 
     return async_update_data
 
@@ -320,6 +420,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=lambda: None,  # Placeholder, will be set below
         update_interval=DEFAULT_UPDATE_INTERVAL,
     )
+
+    coordinator.holfuy_station_status = {str(station): "unknown" for station in stations}
+    coordinator.holfuy_station_errors = {str(station): None for station in stations}
 
     # Set the actual update method with coordinator reference for throttling and repair issues
     coordinator.update_method = _make_update_method(api_key, stations, tu, su, coordinator, hass, entry.entry_id)
