@@ -12,43 +12,17 @@ Holfuy is a network of real-time weather stations specifically designed for avia
 
 - **Live wind data** from weather stations located at popular flying sites and outdoor locations worldwide
 - **Real-time measurements** including wind speed, wind gusts, wind direction, and temperature
-- **Reliable data** used by pilots and outdoor enthusiasts for safety and activity planning
-- **API access** for developers to integrate station data into their applications
+- **Reliable data** Uses high quality hardware
 
 Instructions on how to obtain an API key can be found here: https://api.holfuy.com/
 This integration is not created by Holfuy but it has been reviewed by the Holfuy team.
 
-**To use the integration you need an API key from Holfuy!** You need to contact Holfuy to obtain the key and the key is valid for up to 3 stations.
+**To use the integration you need an API key from Holfuy!** 
 
-## How It Works
-
-This integration:
-
-- **Polls the Holfuy API** at regular intervals to fetch real-time weather data from your configured stations
-- **Supports multiple stations** (up to 3) in a single API call for efficient polling
-- **Creates individual sensors** for each station and each measurement type (wind speed, gust, min, direction, temperature)
-- **Uses a DataUpdateCoordinator** for efficient background updates and automatic error handling
-- **Configurable units** - Choose your preferred wind speed unit (m/s, knots, km/h, mph) and temperature unit (°C, °F) during setup
-- **Config flow integration** - Easy setup through the Home Assistant UI with validation of station IDs
-- **Live API validation** - Validates API key and station IDs during setup by making actual API calls
-
-### Technical Details
-
-- API requests include unit parameters (`tu` for temperature, `su` for wind speed) based on your selection
-- The integration requests data from the API in your chosen units and displays them directly
-- Attempts combined API calls first for efficiency, falls back to individual station requests if needed
-- Handles various API response formats (dict, list, combined or individual station data)
-- Station IDs are validated (0-65000 range) and duplicates are automatically removed
-- **API key and station validation** - During setup, the integration tests each station ID with your API key to ensure they are valid and accessible
-- **Automatic API throttling** - Implements exponential backoff when API errors occur:
-  - Normal operation: Updates every 2 minutes
-  - On consecutive errors: Automatically increases interval (4min → 8min → max 10min)
-  - On recovery: Immediately restores normal 2-minute interval
-  - Protects both the API and your Home Assistant from excessive requests during outages
-- Configuration is stored in Home Assistant config entries and can be modified via Options Flow
 
 ## Features
 
+- **Supports multiple stations** (up to 3) in a single API call for efficient polling
 - Fetches real-time data from Holfuy stations:
   - Wind Speed
   - Wind Gust
@@ -120,12 +94,8 @@ When setting up the integration, you'll choose units for:
 
 **Regional Note**: If you're in Sweden or other regions that use m/s for wind speed, be sure to select **m/s** during setup. Home Assistant's default Metric system uses km/h for wind, so selecting your preferred unit ensures the data displays correctly.
 
-You can change units anytime via **Devices & Services → Holfuy → Configure**.
+You can change units anytime via **Settings → Devices & Services → Holfuy → Configure**.
 
-## Example Sensors
-
-- `sensor.holfuy_wind_speed`
-- `sensor.holfuy_temperature`
 
 ## 🌍 Lovelace Dashboard Example
 
